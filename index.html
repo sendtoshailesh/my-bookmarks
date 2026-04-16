@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔖 My Bookmarks</title>
+<style>
+/* ── Reset & Variables ─────────────────────────────────────────── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --sidebar-w: 280px;
+  --header-h: 56px;
+  --radius: 10px;
+  --radius-sm: 6px;
+  --transition: 0.2s ease;
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'SF Mono', 'Fira Code', monospace;
+}
+
+[data-theme="dark"] {
+  --bg-0: #0d1117;
+  --bg-1: #161b22;
+  --bg-2: #1c2128;
+  --bg-3: #2d333b;
+  --bg-hover: #1f2937;
+  --bg-active: #253142;
+  --border: #30363d;
+  --text-0: #e6edf3;
+  --text-1: #8b949e;
+  --text-2: #6e7681;
+  --accent: #58a6ff;
+  --accent-dim: #1f3a5f;
+  --accent-hover: #79c0ff;
+  --card-bg: #161b22;
+  --card-hover: #1c2533;
+  --badge-bg: #253142;
+  --badge-text: #58a6ff;
+  --search-bg: #0d1117;
+  --scrollbar-track: #161b22;
+  --scrollbar-thumb: #30363d;
+  --shadow: 0 2px 8px rgba(0,0,0,0.3);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.4);
+  --recently-gradient: linear-gradient(135deg, #1a1f35, #1f2937);
+}
+
+[data-theme="light"] {
+  --bg-0: #ffffff;
+  --bg-1: #f6f8fa;
+  --bg-2: #eaeef2;
+  --bg-3: #d0d7de;
+  --bg-hover: #f3f4f6;
+  --bg-active: #ddf4ff;
+  --border: #d0d7de;
+  --text-0: #1f2328;
+  --text-1: #656d76;
+  --text-2: #8b949e;
+  --accent: #0969da;
+  --accent-dim: #ddf4ff;
+  --accent-hover: #0550ae;
+  --card-bg: #ffffff;
+  --card-hover: #f6f8fa;
+  --badge-bg: #ddf4ff;
+  --badge-text: #0969da;
+  --search-bg: #f6f8fa;
+  --scrollbar-track: #f6f8fa;
+  --scrollbar-thumb: #d0d7de;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,0.1);
+  --recently-gradient: linear-gradient(135deg, #eff6ff, #f0f9ff);
+}
+
+html, body { height: 100%; font-family: var(--font); background: var(--bg-0); color: var(--text-0); }
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: var(--accent-hover); }
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
+
+/* ── Layout ────────────────────────────────────────────────────── */
+.app { display: flex; height: 100vh; overflow: hidden; }
+
+/* ── Header ────────────────────────────────────────────────────── */
+.header {
+  height: var(--header-h);
+  display: flex; align-items: center; gap: 12px;
+  padding: 0 20px;
+  background: var(--bg-1);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 50;
+}
+.header-logo { font-size: 18px; font-weight: 700; white-space: nowrap; display: flex; align-items: center; gap: 8px; }
+.header-logo span { color: var(--text-1); font-weight: 400; font-size: 13px; }
+
+.search-box {
+  flex: 1; max-width: 480px; position: relative;
+}
+.search-box input {
+  width: 100%; padding: 8px 12px 8px 36px;
+  background: var(--search-bg); border: 1px solid var(--border);
+  border-radius: var(--radius); color: var(--text-0); font-size: 14px;
+  outline: none; transition: border-color var(--transition);
+}
+.search-box input:focus { border-color: var(--accent); }
+.search-box input::placeholder { color: var(--text-2); }
+.search-icon {
+  position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+  color: var(--text-2); font-size: 14px; pointer-events: none;
+}
+.search-kbd {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  background: var(--bg-2); border: 1px solid var(--border); border-radius: 4px;
+  padding: 1px 6px; font-size: 11px; color: var(--text-2); font-family: var(--font-mono);
+}
+
+.header-actions { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+.btn-icon {
+  width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+  background: transparent; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  cursor: pointer; color: var(--text-1); font-size: 16px; transition: all var(--transition);
+}
+.btn-icon:hover { background: var(--bg-hover); color: var(--text-0); }
+.btn-icon.active { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
+.stats-badge {
+  font-size: 12px; color: var(--text-1); white-space: nowrap; padding: 4px 10px;
+  background: var(--bg-2); border-radius: 20px;
+}
+
+/* ── Sidebar ───────────────────────────────────────────────────── */
+.sidebar {
+  width: var(--sidebar-w); min-width: var(--sidebar-w);
+  background: var(--bg-1); border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; overflow: hidden;
+  transition: transform 0.3s ease, width 0.3s ease;
+}
+.sidebar-header {
+  padding: 16px 16px 12px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.sidebar-title { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-2); }
+.sidebar-count { font-size: 11px; color: var(--text-2); }
+.sidebar-tree {
+  flex: 1; overflow-y: auto; padding: 8px 0;
+}
+
+/* Tree nodes */
+.tree-node { user-select: none; }
+.tree-item {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 12px 5px calc(12px + var(--depth, 0) * 16px);
+  cursor: pointer; font-size: 13px; color: var(--text-1);
+  transition: all var(--transition); border-radius: 0;
+  position: relative;
+}
+.tree-item:hover { background: var(--bg-hover); color: var(--text-0); }
+.tree-item.active { background: var(--bg-active); color: var(--accent); font-weight: 500; }
+.tree-chevron {
+  width: 16px; height: 16px; display: flex; align-items: center; justify-content: center;
+  font-size: 10px; transition: transform var(--transition); flex-shrink: 0;
+  color: var(--text-2);
+}
+.tree-chevron.open { transform: rotate(90deg); }
+.tree-chevron.empty { visibility: hidden; }
+.tree-emoji { font-size: 14px; flex-shrink: 0; }
+.tree-label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tree-badge {
+  font-size: 10px; padding: 1px 6px; border-radius: 10px;
+  background: var(--badge-bg); color: var(--badge-text); flex-shrink: 0;
+  font-weight: 500; font-family: var(--font-mono);
+}
+
+.sidebar-footer {
+  padding: 12px 16px; border-top: 1px solid var(--border);
+  font-size: 11px; color: var(--text-2); text-align: center;
+}
+
+/* ── Main Content ──────────────────────────────────────────────── */
+.main {
+  flex: 1; display: flex; flex-direction: column; overflow: hidden;
+}
+.content {
+  flex: 1; overflow-y: auto; padding: 0;
+}
+
+/* ── Recently Added ────────────────────────────────────────────── */
+.recently-section {
+  padding: 20px 24px 8px;
+}
+.section-header {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 14px;
+}
+.section-title { font-size: 14px; font-weight: 600; color: var(--text-0); }
+.section-count { font-size: 12px; color: var(--text-2); }
+
+.recently-scroll {
+  display: flex; gap: 12px; overflow-x: auto; padding-bottom: 12px;
+  scroll-snap-type: x mandatory;
+}
+.recently-card {
+  flex-shrink: 0; width: 220px; padding: 14px;
+  background: var(--recently-gradient);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  cursor: pointer; transition: all var(--transition);
+  scroll-snap-align: start;
+}
+.recently-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+.recently-card .rc-top { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.recently-card .rc-favicon { width: 16px; height: 16px; border-radius: 3px; }
+.recently-card .rc-domain { font-size: 11px; color: var(--text-2); }
+.recently-card .rc-title {
+  font-size: 13px; font-weight: 500; color: var(--text-0);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  line-height: 1.4;
+}
+.recently-card .rc-folder { font-size: 11px; color: var(--text-2); margin-top: 8px; }
+
+/* ── Bookmark List Area ────────────────────────────────────────── */
+.bookmarks-section { padding: 12px 24px 24px; }
+.bookmarks-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
+}
+.breadcrumb { display: flex; align-items: center; gap: 4px; font-size: 13px; }
+.breadcrumb-item { color: var(--text-2); cursor: pointer; }
+.breadcrumb-item:hover { color: var(--accent); }
+.breadcrumb-sep { color: var(--text-2); margin: 0 2px; }
+.breadcrumb-current { color: var(--text-0); font-weight: 600; }
+.sort-select {
+  background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  color: var(--text-1); font-size: 12px; padding: 4px 8px; cursor: pointer; outline: none;
+}
+
+/* ── Card View ─────────────────────────────────────────────────── */
+.bookmark-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 12px;
+}
+.bookmark-card {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 14px 16px;
+  background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius);
+  cursor: pointer; transition: all var(--transition);
+  text-decoration: none; color: var(--text-0);
+}
+.bookmark-card:hover {
+  border-color: var(--accent); background: var(--card-hover);
+  transform: translateY(-1px); box-shadow: var(--shadow);
+  color: var(--text-0);
+}
+.bk-favicon { width: 20px; height: 20px; border-radius: 4px; flex-shrink: 0; margin-top: 1px; }
+.bk-info { flex: 1; min-width: 0; }
+.bk-title {
+  font-size: 13px; font-weight: 500; line-height: 1.4;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.bk-url {
+  font-size: 11px; color: var(--text-2); margin-top: 2px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.bk-folder {
+  display: inline-block; font-size: 10px; color: var(--badge-text); background: var(--badge-bg);
+  padding: 1px 7px; border-radius: 10px; margin-top: 6px;
+}
+
+/* ── List View ─────────────────────────────────────────────────── */
+.bookmark-list { display: flex; flex-direction: column; gap: 1px; }
+.bookmark-list .bookmark-card {
+  border-radius: 0; border: none; border-bottom: 1px solid var(--border);
+  padding: 10px 16px; gap: 10px;
+}
+.bookmark-list .bookmark-card:first-child { border-radius: var(--radius-sm) var(--radius-sm) 0 0; }
+.bookmark-list .bookmark-card:last-child { border-radius: 0 0 var(--radius-sm) var(--radius-sm); border-bottom: none; }
+.bookmark-list .bookmark-card:hover { transform: none; }
+.bookmark-list .bk-meta { display: flex; align-items: center; gap: 12px; margin-top: 0; }
+.bookmark-list .bk-folder { margin-top: 0; }
+
+/* ── Empty/Loading states ──────────────────────────────────────── */
+.empty-state {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 60px 20px; color: var(--text-2); text-align: center;
+}
+.empty-state .empty-icon { font-size: 48px; margin-bottom: 16px; }
+.empty-state .empty-title { font-size: 16px; font-weight: 600; color: var(--text-1); margin-bottom: 4px; }
+.empty-state .empty-desc { font-size: 13px; }
+
+.loading { display: flex; align-items: center; justify-content: center; height: 100%; }
+.spinner {
+  width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--accent);
+  border-radius: 50%; animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Mobile hamburger ──────────────────────────────────────────── */
+.hamburger {
+  display: none; width: 36px; height: 36px; align-items: center; justify-content: center;
+  background: transparent; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  cursor: pointer; color: var(--text-1); font-size: 18px;
+}
+.sidebar-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99;
+}
+
+/* ── Responsive ────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed; left: 0; top: 0; bottom: 0; z-index: 100;
+    transform: translateX(-100%);
+  }
+  .sidebar.open { transform: translateX(0); }
+  .sidebar-overlay.open { display: block; }
+  .hamburger { display: flex; }
+  .search-kbd { display: none; }
+  .bookmark-grid { grid-template-columns: 1fr; }
+  .recently-card { width: 180px; }
+  .stats-badge { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- Sidebar Overlay (mobile) -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <span class="sidebar-title">Folders</span>
+      <span class="sidebar-count" id="sidebarCount"></span>
+    </div>
+    <nav class="sidebar-tree" id="sidebarTree"></nav>
+    <div class="sidebar-footer">
+      <a href="https://github.com/sendtoshailesh/my-bookmarks" target="_blank">⭐ GitHub Repo</a>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <!-- Header -->
+    <header class="header">
+      <button class="hamburger" onclick="toggleSidebar()">☰</button>
+      <div class="header-logo">🔖 My Bookmarks</div>
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="Search bookmarks..." autocomplete="off">
+        <span class="search-kbd">⌘K</span>
+      </div>
+      <div class="header-actions">
+        <span class="stats-badge" id="statsText"></span>
+        <button class="btn-icon" id="btnGrid" title="Card view" onclick="setView('grid')">⊞</button>
+        <button class="btn-icon" id="btnList" title="List view" onclick="setView('list')">≡</button>
+        <button class="btn-icon" id="btnTheme" title="Toggle theme" onclick="toggleTheme()">🌙</button>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <div class="content" id="content">
+      <div class="loading"><div class="spinner"></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ─────────────────────────────────────────────────────────
+let allBookmarks = [];
+let folderTree = {};
+let currentFolder = null; // null = all
+let currentView = localStorage.getItem('bk-view') || 'grid';
+let searchQuery = '';
+
+// ── Emoji mapping ─────────────────────────────────────────────────
+const EMOJI_MAP = {
+  ai:'🤖',ml:'🤖','machine learning':'🤖','deep learning':'🤖',
+  cloud:'☁️',aws:'☁️',azure:'☁️',gcp:'☁️',
+  dev:'💻',code:'💻',programming:'💻',
+  draw:'🎨',design:'🎨',ui:'🎨',
+  git:'🔀',gh:'🔀',github:'🔀',
+  video:'🎬',youtube:'🎬',
+  data:'📊',analytics:'📊',database:'📊',db:'📊',
+  security:'🔒',auth:'🔒',
+  network:'🌐',networking:'🌐',web:'🌐',
+  tool:'🔧',tools:'🔧',
+  learn:'📚',education:'📚',training:'📚',course:'📚',workshop:'📚',workshops:'📚',
+  news:'📰',blog:'📰',blogs:'📰',
+  finance:'💰',money:'💰',
+  docker:'🐳',container:'🐳',kubernetes:'🐳',
+  terraform:'🏗️',infra:'🏗️',
+  test:'🧪',testing:'🧪',
+  api:'🔌',
+  mobile:'📱',
+  image:'🖼️',images:'🖼️',
+  prompt:'💬',chat:'💬',gpt:'💬',llm:'💬',
+  'bookmarks bar':'📌','other bookmarks':'📂','mobile bookmarks':'📱',
+  imported:'📥',cheatsheet:'📋',cheat:'📋',storage:'💾',
+  migrate:'🔄',migration:'🔄',
+};
+
+function getEmoji(name) {
+  const lower = name.toLowerCase();
+  if (EMOJI_MAP[lower]) return EMOJI_MAP[lower];
+  for (const [k,v] of Object.entries(EMOJI_MAP)) {
+    if (lower.includes(k) || k.includes(lower)) return v;
+  }
+  return '📁';
+}
+
+function getDomain(url) {
+  try { let h = new URL(url).hostname; return h.startsWith('www.') ? h.slice(4) : h; }
+  catch { return ''; }
+}
+
+function getFaviconUrl(url) {
+  try {
+    const domain = new URL(url).hostname;
+    return `https://www.google.com/s2/favicons?sz=32&domain=${domain}`;
+  } catch { return ''; }
+}
+
+// ── Parse Chromium bookmarks ──────────────────────────────────────
+function flattenNode(node, folderPath='') {
+  const results = [];
+  if (node.type === 'url') {
+    results.push({
+      title: node.name || '',
+      url: node.url || '',
+      folder: folderPath,
+      dateAdded: node.date_added || '0',
+    });
+  } else if (node.type === 'folder') {
+    const childPath = folderPath ? `${folderPath}/${node.name}` : node.name;
+    for (const child of (node.children || [])) {
+      results.push(...flattenNode(child, childPath));
+    }
+  }
+  return results;
+}
+
+const ROOT_NAMES = { bookmark_bar:'Bookmarks Bar', other:'Other Bookmarks', synced:'Mobile Bookmarks' };
+
+function parseBookmarks(data) {
+  const results = [];
+  const roots = data.roots || {};
+  for (const [key, node] of Object.entries(roots)) {
+    if (!node || typeof node !== 'object') continue;
+    const rootName = ROOT_NAMES[key] || key;
+    if (node.type === 'folder') {
+      for (const child of (node.children || [])) {
+        results.push(...flattenNode(child, rootName));
+      }
+    }
+  }
+  return results;
+}
+
+function buildTree(bookmarks) {
+  const tree = {};
+  for (const bm of bookmarks) {
+    const parts = (bm.folder || 'Other').split('/').filter(Boolean);
+    let node = tree;
+    for (const p of parts) {
+      if (!node[p]) node[p] = { __children: {}, __items: [] };
+      node = node[p].__children;
+    }
+  }
+
+  // Re-walk to attach items
+  for (const bm of bookmarks) {
+    const parts = (bm.folder || 'Other').split('/').filter(Boolean);
+    let node = tree;
+    for (let i = 0; i < parts.length; i++) {
+      if (i === parts.length - 1) {
+        node[parts[i]].__items.push(bm);
+      } else {
+        node = node[parts[i]].__children;
+      }
+    }
+  }
+  return tree;
+}
+
+function countItems(node) {
+  let c = (node.__items || []).length;
+  for (const [k,v] of Object.entries(node.__children || {})) { c += countItems(v); }
+  return c;
+}
+
+// ── Sidebar Render ────────────────────────────────────────────────
+function renderSidebar() {
+  const el = document.getElementById('sidebarTree');
+  el.innerHTML = '';
+
+  // "All Bookmarks" item
+  const allItem = createTreeItem('All Bookmarks', '📚', allBookmarks.length, 0, null);
+  if (currentFolder === null) allItem.querySelector('.tree-item').classList.add('active');
+  el.appendChild(allItem);
+
+  // Folder tree
+  for (const [name, node] of Object.entries(folderTree).sort((a,b) => a[0].localeCompare(b[0]))) {
+    el.appendChild(renderTreeNode(name, node, 0, name));
+  }
+
+  document.getElementById('sidebarCount').textContent = Object.keys(folderTree).length + ' root folders';
+}
+
+function renderTreeNode(name, node, depth, path) {
+  const count = countItems(node);
+  const hasChildren = Object.keys(node.__children || {}).length > 0;
+  const wrapper = document.createElement('div');
+  wrapper.className = 'tree-node';
+
+  const item = createTreeItem(name, getEmoji(name), count, depth, path);
+  wrapper.appendChild(item);
+
+  if (hasChildren) {
+    const childContainer = document.createElement('div');
+    childContainer.className = 'tree-children';
+    childContainer.style.display = currentFolder && currentFolder.startsWith(path) ? 'block' : 'none';
+    for (const [cName, cNode] of Object.entries(node.__children).sort((a,b) => a[0].localeCompare(b[0]))) {
+      childContainer.appendChild(renderTreeNode(cName, cNode, depth+1, `${path}/${cName}`));
+    }
+    wrapper.appendChild(childContainer);
+
+    const chevron = item.querySelector('.tree-chevron');
+    if (currentFolder && currentFolder.startsWith(path)) chevron.classList.add('open');
+
+    item.querySelector('.tree-item').addEventListener('click', () => {
+      const isOpen = childContainer.style.display !== 'none';
+      childContainer.style.display = isOpen ? 'none' : 'block';
+      chevron.classList.toggle('open', !isOpen);
+      selectFolder(path);
+    });
+  } else {
+    item.querySelector('.tree-item').addEventListener('click', () => selectFolder(path));
+  }
+
+  return wrapper;
+}
+
+function createTreeItem(name, emoji, count, depth, path) {
+  const div = document.createElement('div');
+  const hasPath = path !== null;
+  div.innerHTML = `
+    <div class="tree-item" style="--depth:${depth}" data-path="${path || ''}">
+      <span class="tree-chevron ${hasPath ? '' : 'empty'}">▶</span>
+      <span class="tree-emoji">${emoji}</span>
+      <span class="tree-label">${name}</span>
+      <span class="tree-badge">${count}</span>
+    </div>
+  `;
+  return div;
+}
+
+function selectFolder(path) {
+  currentFolder = path;
+  document.querySelectorAll('.tree-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.path === (path || ''));
+  });
+  renderContent();
+}
+
+// ── Content Render ────────────────────────────────────────────────
+function getFilteredBookmarks() {
+  let bms = allBookmarks;
+  if (currentFolder) {
+    bms = bms.filter(b => b.folder === currentFolder || b.folder.startsWith(currentFolder + '/'));
+  }
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    bms = bms.filter(b =>
+      (b.title && b.title.toLowerCase().includes(q)) ||
+      (b.url && b.url.toLowerCase().includes(q)) ||
+      (b.folder && b.folder.toLowerCase().includes(q))
+    );
+  }
+  return bms;
+}
+
+function renderContent() {
+  const content = document.getElementById('content');
+  const filtered = getFilteredBookmarks();
+
+  let html = '';
+
+  // Recently added (only when showing all and no search)
+  if (!currentFolder && !searchQuery) {
+    const recent = [...allBookmarks]
+      .sort((a,b) => (b.dateAdded||'0').localeCompare(a.dateAdded||'0'))
+      .slice(0, 20);
+
+    html += `<div class="recently-section">
+      <div class="section-header">
+        <span class="section-title">⭐ Recently Added</span>
+        <span class="section-count">${recent.length} bookmarks</span>
+      </div>
+      <div class="recently-scroll">
+        ${recent.map(bm => `
+          <a href="${escHtml(bm.url)}" target="_blank" rel="noopener" class="recently-card">
+            <div class="rc-top">
+              <img class="rc-favicon" src="${getFaviconUrl(bm.url)}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><text y=%2213%22 font-size=%2212%22>🌐</text></svg>'" alt="">
+              <span class="rc-domain">${escHtml(getDomain(bm.url))}</span>
+            </div>
+            <div class="rc-title">${escHtml(bm.title || bm.url)}</div>
+            <div class="rc-folder">📁 ${escHtml(bm.folder)}</div>
+          </a>
+        `).join('')}
+      </div>
+    </div>`;
+  }
+
+  // Breadcrumb
+  let breadcrumb = '';
+  if (currentFolder) {
+    const parts = currentFolder.split('/');
+    let accumulated = '';
+    breadcrumb = '<div class="breadcrumb">';
+    breadcrumb += `<span class="breadcrumb-item" onclick="selectFolder(null)">All</span>`;
+    for (let i = 0; i < parts.length; i++) {
+      accumulated += (i === 0 ? '' : '/') + parts[i];
+      breadcrumb += `<span class="breadcrumb-sep">›</span>`;
+      if (i === parts.length - 1) {
+        breadcrumb += `<span class="breadcrumb-current">${getEmoji(parts[i])} ${escHtml(parts[i])}</span>`;
+      } else {
+        const p = accumulated;
+        breadcrumb += `<span class="breadcrumb-item" onclick="selectFolder('${escHtml(p)}')">${escHtml(parts[i])}</span>`;
+      }
+    }
+    breadcrumb += '</div>';
+  }
+
+  const viewClass = currentView === 'list' ? 'bookmark-list' : 'bookmark-grid';
+  const label = currentFolder ? currentFolder.split('/').pop() : (searchQuery ? `Results for "${searchQuery}"` : 'All Bookmarks');
+
+  html += `<div class="bookmarks-section">
+    <div class="bookmarks-header">
+      ${breadcrumb || `<div class="section-title">${searchQuery ? '🔍' : '📚'} ${escHtml(label)}</div>`}
+      <span class="section-count">${filtered.length.toLocaleString()} bookmarks</span>
+    </div>`;
+
+  if (filtered.length === 0) {
+    html += `<div class="empty-state">
+      <div class="empty-icon">🔍</div>
+      <div class="empty-title">No bookmarks found</div>
+      <div class="empty-desc">Try a different search or folder</div>
+    </div>`;
+  } else {
+    html += `<div class="${viewClass}">`;
+    for (const bm of filtered) {
+      const domain = getDomain(bm.url);
+      const favicon = getFaviconUrl(bm.url);
+      const title = escHtml(bm.title || bm.url);
+      html += `
+        <a href="${escHtml(bm.url)}" target="_blank" rel="noopener" class="bookmark-card">
+          <img class="bk-favicon" src="${favicon}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><text y=%2213%22 font-size=%2212%22>🌐</text></svg>'" alt="">
+          <div class="bk-info">
+            <div class="bk-title">${title}</div>
+            <div class="bk-url">${escHtml(domain)}</div>
+            ${currentView === 'grid' ? `<span class="bk-folder">${escHtml(bm.folder.split('/').pop())}</span>` : ''}
+          </div>
+          ${currentView === 'list' ? `<span class="bk-folder">${escHtml(bm.folder.split('/').pop())}</span>` : ''}
+        </a>`;
+    }
+    html += '</div>';
+  }
+  html += '</div>';
+
+  content.innerHTML = html;
+  document.getElementById('statsText').textContent = `${allBookmarks.length.toLocaleString()} bookmarks`;
+  updateViewButtons();
+}
+
+function escHtml(s) {
+  if (!s) return '';
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// ── View & Theme ──────────────────────────────────────────────────
+function setView(view) {
+  currentView = view;
+  localStorage.setItem('bk-view', view);
+  renderContent();
+}
+
+function updateViewButtons() {
+  document.getElementById('btnGrid').classList.toggle('active', currentView === 'grid');
+  document.getElementById('btnList').classList.toggle('active', currentView === 'list');
+}
+
+function toggleTheme() {
+  const html = document.documentElement;
+  const current = html.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  localStorage.setItem('bk-theme', next);
+  document.getElementById('btnTheme').textContent = next === 'dark' ? '🌙' : '☀️';
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('open');
+}
+
+// ── Search ────────────────────────────────────────────────────────
+let searchTimeout;
+document.getElementById('searchInput').addEventListener('input', (e) => {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    searchQuery = e.target.value.trim();
+    renderContent();
+  }, 150);
+});
+
+// ⌘K / Ctrl+K shortcut
+document.addEventListener('keydown', (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+    e.preventDefault();
+    document.getElementById('searchInput').focus();
+  }
+  if (e.key === 'Escape') {
+    document.getElementById('searchInput').blur();
+    searchQuery = '';
+    document.getElementById('searchInput').value = '';
+    renderContent();
+  }
+});
+
+// ── Init ──────────────────────────────────────────────────────────
+(async function init() {
+  // Restore theme
+  const savedTheme = localStorage.getItem('bk-theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', savedTheme);
+  document.getElementById('btnTheme').textContent = savedTheme === 'dark' ? '🌙' : '☀️';
+
+  try {
+    const resp = await fetch('bookmarks.json');
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+
+    allBookmarks = parseBookmarks(data);
+    folderTree = buildTree(allBookmarks);
+
+    renderSidebar();
+    renderContent();
+  } catch (err) {
+    document.getElementById('content').innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">⚠️</div>
+        <div class="empty-title">Could not load bookmarks</div>
+        <div class="empty-desc">${escHtml(err.message)}<br>Make sure bookmarks.json exists in the same directory.</div>
+      </div>
+    `;
+  }
+})();
+</script>
+</body>
+</html>
