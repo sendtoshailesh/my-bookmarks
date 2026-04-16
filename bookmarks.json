@@ -5831,6 +5831,11 @@
           "url": "https://m365.cloud.microsoft/create?"
         },
         {
+          "name": "🔖 ",
+          "type": "url",
+          "url": "https://sendtoshailesh.github.io/my-bookmarks/"
+        },
+        {
           "name": "",
           "type": "url",
           "url": "https://microsoftapc.sharepoint.com/_layouts/15/videohub.aspx"
@@ -6034,6 +6039,11 @@
           "name": "",
           "type": "url",
           "url": "https://feedly.com/i/my/me"
+        },
+        {
+          "name": "",
+          "type": "url",
+          "url": "https://sendtoshailesh.github.io/"
         },
         {
           "name": "",
