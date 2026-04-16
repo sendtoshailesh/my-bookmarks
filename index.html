@@ -309,6 +309,53 @@ a:hover { color: var(--accent-hover); }
 .kbd-key { display: inline-block; padding: 3px 8px; background: var(--bg-2); border: 1px solid var(--border); border-radius: 4px; font-family: var(--font-mono); font-size: 12px; color: var(--text-1); text-align: center; min-width: 28px; }
 .kbd-desc { font-size: 13px; color: var(--text-1); }
 
+/* ── Quick Launch Strip (home page compact bar) ───────────────── */
+.quicklaunch-strip { padding: 16px 24px 4px; }
+.quicklaunch-strip .section-header { margin-bottom: 10px; }
+.ql-scroll { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; scroll-snap-type: x mandatory; }
+.ql-icon {
+  flex-shrink: 0; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
+  background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius);
+  cursor: pointer; transition: all var(--transition); scroll-snap-align: start;
+  text-decoration: none; position: relative;
+}
+.ql-icon:hover { border-color: var(--accent); background: var(--card-hover); transform: translateY(-2px); box-shadow: var(--shadow); }
+.ql-icon img { width: 24px; height: 24px; border-radius: 4px; }
+.ql-icon .ql-tooltip {
+  display: none; position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+  background: var(--bg-1); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 4px 10px; font-size: 11px; color: var(--text-0); white-space: nowrap;
+  box-shadow: var(--shadow-lg); z-index: 10; pointer-events: none;
+}
+.ql-icon:hover .ql-tooltip { display: block; }
+
+/* ── Quick Launch Full Grid View ──────────────────────────────── */
+.quicklaunch-section { padding: 24px; }
+.quicklaunch-section .section-header { margin-bottom: 16px; }
+.ql-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 16px;
+}
+.ql-tile {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 16px 8px; background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: var(--radius); cursor: pointer; transition: all var(--transition);
+  text-decoration: none; color: var(--text-0);
+}
+.ql-tile:hover { border-color: var(--accent); background: var(--card-hover); transform: translateY(-3px); box-shadow: var(--shadow-lg); color: var(--text-0); }
+.ql-tile img { width: 48px; height: 48px; border-radius: 8px; }
+.ql-tile .ql-name { font-size: 11px; font-weight: 500; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; color: var(--text-1); }
+.ql-tile:hover .ql-name { color: var(--text-0); }
+.ql-category-title { font-size: 12px; font-weight: 600; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.5px; margin: 20px 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+.ql-category-title:first-child { margin-top: 0; }
+
+@media (max-width: 768px) {
+  .ql-grid { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px; }
+  .ql-tile img { width: 36px; height: 36px; }
+  .ql-tile { padding: 12px 6px; }
+  .ql-icon { width: 38px; height: 38px; }
+  .ql-icon img { width: 20px; height: 20px; }
+}
+
 /* Search highlights */
 mark { background: var(--highlight-bg); color: var(--text-0); padding: 1px 2px; border-radius: 2px; }
 
@@ -415,6 +462,7 @@ mark { background: var(--highlight-bg); color: var(--text-0); padding: 1px 2px; 
       <span class="kbd-key">4</span><span class="kbd-desc">Masonry view</span>
       <span class="kbd-key">S</span><span class="kbd-desc">Open stats</span>
       <span class="kbd-key">F</span><span class="kbd-desc">Show favorites only</span>
+      <span class="kbd-key">Q</span><span class="kbd-desc">Quick Launch (icon-only bookmarks)</span>
       <span class="kbd-key">T</span><span class="kbd-desc">Toggle theme</span>
       <span class="kbd-key">?</span><span class="kbd-desc">Show this help</span>
       <span class="kbd-key">R</span><span class="kbd-desc">Refresh bookmarks</span>
@@ -474,6 +522,50 @@ let selectedIndex = -1;
 let customBookmarks = JSON.parse(localStorage.getItem('bk-custom') || '[]');
 let showReadingList = false;
 let readingListItems = [];
+let showQuickLaunch = false;
+let quickLaunchItems = [];
+
+// ── Domain-to-friendly-name mapping ───────────────────────────────
+const DOMAIN_NAMES = {
+  'mail.google.com':'Gmail','drive.google.com':'Drive','keep.google.com':'Keep',
+  'calendar.google.com':'Calendar','docs.google.com':'Docs','notebooklm.google.com':'NotebookLM',
+  'gemini.google.com':'Gemini','photos.google.com':'Photos','maps.google.com':'Maps',
+  'translate.google.com':'Translate','news.google.com':'News',
+  'www.youtube.com':'YouTube','youtube.com':'YouTube',
+  'www.google.com':'Google','accounts.google.com':'Google Acct',
+  'github.com':'GitHub','gist.github.com':'Gist','learn.github.com':'GitHub Learn',
+  'www.linkedin.com':'LinkedIn','linkedin.com':'LinkedIn',
+  'x.com':'X','twitter.com':'X','www.reddit.com':'Reddit','reddit.com':'Reddit',
+  'www.facebook.com':'Facebook','facebook.com':'Facebook',
+  'www.instagram.com':'Instagram','web.whatsapp.com':'WhatsApp',
+  'medium.com':'Medium','substack.com':'Substack','dev.to':'Dev.to',
+  'www.perplexity.ai':'Perplexity','perplexity.ai':'Perplexity',
+  'claude.ai':'Claude','chatgpt.com':'ChatGPT','chat.openai.com':'ChatGPT',
+  'feeder.co':'Feeder','www.kaggle.com':'Kaggle','huggingface.co':'HuggingFace',
+  'www.alphaxiv.org':'AlphaXiv','papiers.ai':'Papiers','scispace.com':'SciSpace',
+  'www.openread.academy':'OpenRead','www.kdnuggets.com':'KDnuggets',
+  'm365.cloud.microsoft':'M365','onenote.cloud.microsoft':'OneNote',
+  'eng.ms':'Eng.ms','outlook.office.com':'Outlook','teams.microsoft.com':'Teams',
+  'portal.azure.com':'Azure','learn.microsoft.com':'MS Learn',
+  'eportal.incometax.gov.in':'Income Tax','www.moneycontrol.com':'Moneycontrol',
+  'guide.aws.dev':'AWS Guide','india.madang.feedback.aws.dev':'AWS Feedback',
+  'insiders.vscode.dev':'VS Code','vscode.dev':'VS Code',
+};
+const DOMAIN_CATEGORIES = {
+  'Google':['mail.google.com','drive.google.com','keep.google.com','calendar.google.com','docs.google.com','notebooklm.google.com','photos.google.com','maps.google.com','translate.google.com','news.google.com','www.google.com','accounts.google.com','gemini.google.com'],
+  'Microsoft':['m365.cloud.microsoft','onenote.cloud.microsoft','eng.ms','outlook.office.com','teams.microsoft.com','portal.azure.com','learn.microsoft.com','microsoftapc.sharepoint.com','microsoftapc-my.sharepoint.com'],
+  'Social':['www.linkedin.com','linkedin.com','x.com','twitter.com','www.reddit.com','reddit.com','www.facebook.com','facebook.com','www.instagram.com','web.whatsapp.com','medium.com','substack.com'],
+  'Dev & AI':['github.com','gist.github.com','learn.github.com','claude.ai','chatgpt.com','chat.openai.com','www.perplexity.ai','perplexity.ai','huggingface.co','www.kaggle.com','feeder.co','insiders.vscode.dev','vscode.dev','dev.to'],
+  'Research':['www.alphaxiv.org','papiers.ai','scispace.com','www.openread.academy','www.kdnuggets.com'],
+  'Finance & Govt':['eportal.incometax.gov.in','www.moneycontrol.com'],
+  'AWS':['guide.aws.dev','india.madang.feedback.aws.dev'],
+};
+function getQuickLaunchName(url){
+  try{const h=new URL(url).hostname;if(DOMAIN_NAMES[h])return DOMAIN_NAMES[h];return h.replace(/^www\./,'').split('.')[0].charAt(0).toUpperCase()+h.replace(/^www\./,'').split('.')[0].slice(1);}catch{return'Link';}
+}
+function getQuickLaunchCategory(url){
+  try{const h=new URL(url).hostname;for(const[cat,domains]of Object.entries(DOMAIN_CATEGORIES)){if(domains.some(d=>h===d||h.endsWith('.'+d)))return cat;}return'Other';}catch{return'Other';}
+}
 
 // ── Emoji mapping ─────────────────────────────────────────────────
 const EM = {
@@ -557,19 +649,25 @@ function renderSidebar(){
   // All Bookmarks
   const allDiv=mkTreeItem('All Bookmarks','📚',allBookmarks.length,0,null);
   if(!currentFolder&&!showFavsOnly)allDiv.querySelector('.tree-item').classList.add('active');
-  allDiv.querySelector('.tree-item').addEventListener('click',()=>{showFavsOnly=false;showReadingList=false;activeTag=null;selectFolder(null);});
+  allDiv.querySelector('.tree-item').addEventListener('click',()=>{showFavsOnly=false;showReadingList=false;showQuickLaunch=false;activeTag=null;selectFolder(null);});
   el.appendChild(allDiv);
 
   // Favorites
   const favDiv=mkTreeItem(`Favorites`,`⭐`,favorites.length,0,'__favs__');
   if(showFavsOnly)favDiv.querySelector('.tree-item').classList.add('active');
-  favDiv.querySelector('.tree-item').addEventListener('click',()=>{showFavsOnly=true;activeTag=null;currentFolder=null;showReadingList=false;renderContent();updateActiveStates();});
+  favDiv.querySelector('.tree-item').addEventListener('click',()=>{showFavsOnly=true;activeTag=null;currentFolder=null;showReadingList=false;showQuickLaunch=false;renderContent();updateActiveStates();});
   el.appendChild(favDiv);
+
+  // Quick Launch
+  const qlDiv=mkTreeItem('Quick Launch','⚡',quickLaunchItems.length,0,'__quicklaunch__');
+  if(showQuickLaunch)qlDiv.querySelector('.tree-item').classList.add('active');
+  qlDiv.querySelector('.tree-item').addEventListener('click',()=>{showQuickLaunch=true;showFavsOnly=false;activeTag=null;currentFolder=null;showReadingList=false;renderContent();updateActiveStates();});
+  el.appendChild(qlDiv);
 
   // Reading List
   const rlDiv=mkTreeItem('Reading List','📖',readingListItems.length,0,'__readlist__');
   if(showReadingList)rlDiv.querySelector('.tree-item').classList.add('active');
-  rlDiv.querySelector('.tree-item').addEventListener('click',()=>{showReadingList=true;showFavsOnly=false;activeTag=null;currentFolder=null;renderContent();updateActiveStates();});
+  rlDiv.querySelector('.tree-item').addEventListener('click',()=>{showReadingList=true;showFavsOnly=false;showQuickLaunch=false;activeTag=null;currentFolder=null;renderContent();updateActiveStates();});
   el.appendChild(rlDiv);
 
   el.appendChild(Object.assign(document.createElement('div'),{className:'sidebar-divider'}));
@@ -626,9 +724,10 @@ function mkTreeItem(name,emoji,count,depth,path){
   return d;
 }
 
-function selectFolder(p){currentFolder=p;showFavsOnly=false;showReadingList=false;updateActiveStates();renderContent();}
+function selectFolder(p){currentFolder=p;showFavsOnly=false;showReadingList=false;showQuickLaunch=false;updateActiveStates();renderContent();}
 function updateActiveStates(){document.querySelectorAll('.tree-item').forEach(el=>{
   if(showFavsOnly)el.classList.toggle('active',el.dataset.path==='__favs__');
+  else if(showQuickLaunch)el.classList.toggle('active',el.dataset.path==='__quicklaunch__');
   else if(showReadingList)el.classList.toggle('active',el.dataset.path==='__readlist__');
   else el.classList.toggle('active',el.dataset.path===(currentFolder||''));
 });}
@@ -687,11 +786,59 @@ function highlightText(text, query){
   return escaped.replace(new RegExp(`(${q})`,'gi'),'<mark>$1</mark>');
 }
 
+// ── Quick Launch Full View ─────────────────────────────────────
+function renderQuickLaunch(){
+  const content=document.getElementById('content');
+  if(!quickLaunchItems.length){
+    content.innerHTML=`<div class="empty-state"><div class="empty-icon">⚡</div><div class="empty-title">No Quick Launch Items</div><div class="empty-desc">Icon-only bookmarks from Chrome's toolbar will appear here.</div></div>`;
+    return;
+  }
+  // Group by category
+  const groups={};
+  for(const bm of quickLaunchItems){
+    const cat=getQuickLaunchCategory(bm.url);
+    if(!groups[cat])groups[cat]=[];
+    groups[cat].push(bm);
+  }
+  // Sort categories: known categories first, then 'Other'
+  const catOrder=['Google','Microsoft','Social','Dev & AI','Research','AWS','Finance & Govt','Other'];
+  const sortedCats=Object.keys(groups).sort((a,b)=>{
+    const ai=catOrder.indexOf(a),bi=catOrder.indexOf(b);
+    return (ai===-1?99:ai)-(bi===-1?99:bi);
+  });
+
+  let html=`<div class="quicklaunch-section"><div class="section-header"><span class="section-title">⚡ Quick Launch</span><span class="section-count">${quickLaunchItems.length} sites</span></div>`;
+  for(const cat of sortedCats){
+    html+=`<div class="ql-category-title">${escH(cat)}</div>`;
+    html+=`<div class="ql-grid">`;
+    for(const bm of groups[cat]){
+      const name=getQuickLaunchName(bm.url);
+      html+=`<a href="${escH(bm.url)}" target="_blank" rel="noopener" class="ql-tile" title="${escH(bm.url)}">
+        <img src="${getFav(bm.url)}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><text y=%2213%22 font-size=%2212%22>🌐</text></svg>'" alt="${escH(name)}">
+        <span class="ql-name">${escH(name)}</span></a>`;
+    }
+    html+=`</div>`;
+  }
+  html+=`</div>`;
+  content.innerHTML=html;
+}
+
 function renderContent(){
   if(showReadingList){renderReadingList();return;}
+  if(showQuickLaunch){renderQuickLaunch();return;}
   const content=document.getElementById('content');const filtered=getFiltered();
   selectedIndex=-1;
   let html='';
+
+  // Quick Launch strip (compact favicon bar on home page)
+  if(!showFavsOnly&&!currentFolder&&!searchQuery&&!activeTag&&quickLaunchItems.length>0){
+    html+=`<div class="quicklaunch-strip"><div class="section-header"><span class="section-title">⚡ Quick Launch</span><span class="section-count">${quickLaunchItems.length}</span></div><div class="ql-scroll">`;
+    for(const bm of quickLaunchItems){
+      const name=getQuickLaunchName(bm.url);
+      html+=`<a href="${escH(bm.url)}" target="_blank" rel="noopener" class="ql-icon" title="${escH(name)}"><img src="${getFav(bm.url)}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><text y=%2213%22 font-size=%2212%22>🌐</text></svg>'" alt="${escH(name)}"><span class="ql-tooltip">${escH(name)}</span></a>`;
+    }
+    html+=`</div></div>`;
+  }
 
   // Favorites bar (if any favorites and showing all)
   if(!showFavsOnly&&!currentFolder&&!searchQuery&&!activeTag&&favorites.length>0){
@@ -842,7 +989,9 @@ document.addEventListener('keydown',e=>{
   // S = stats
   if(e.key==='s'||e.key==='S'){openStats();return;}
   // F = favorites
-  if(e.key==='f'||e.key==='F'){showFavsOnly=!showFavsOnly;if(showFavsOnly){currentFolder=null;activeTag=null;}renderSidebar();renderContent();return;}
+  if(e.key==='f'||e.key==='F'){showFavsOnly=!showFavsOnly;if(showFavsOnly){currentFolder=null;activeTag=null;showQuickLaunch=false;}renderSidebar();renderContent();return;}
+  // Q = quick launch
+  if(e.key==='q'||e.key==='Q'){showQuickLaunch=!showQuickLaunch;if(showQuickLaunch){showFavsOnly=false;currentFolder=null;activeTag=null;showReadingList=false;}renderSidebar();renderContent();updateActiveStates();return;}
   // T = theme
   if(e.key==='t'||e.key==='T'){toggleTheme();return;}
   // ? = shortcuts
@@ -889,6 +1038,7 @@ async function refreshBookmarks() {
       if (!allBookmarks.find(b => b.url === cb.url)) allBookmarks.push(cb);
     }
     for (const bm of allBookmarks) bm.tags = autoTags(bm);
+    quickLaunchItems = allBookmarks.filter(bm => (bm.title||'').trim().length <= 2);
     folderTree = buildTree(allBookmarks);
     renderSidebar(); renderContent();
     showToast('✅ Bookmarks refreshed!');
@@ -939,6 +1089,7 @@ function submitAddBookmark(e) {
   // Add to live data
   newBm.tags = autoTags(newBm);
   allBookmarks.push(newBm);
+  quickLaunchItems = allBookmarks.filter(bm => (bm.title||'').trim().length <= 2);
   folderTree = buildTree(allBookmarks);
   renderSidebar(); renderContent();
   closeAddModal();
@@ -970,6 +1121,8 @@ function exportCustomBookmarks() {
     for(const cb of customBookmarks){if(!allBookmarks.find(b=>b.url===cb.url)){cb.isCustom=true;allBookmarks.push(cb);}}
     // Generate auto-tags
     for(const bm of allBookmarks)bm.tags=autoTags(bm);
+    // Detect icon-only bookmarks (Quick Launch items)
+    quickLaunchItems=allBookmarks.filter(bm=>(bm.title||'').trim().length<=2);
     folderTree=buildTree(allBookmarks);
     renderSidebar();renderContent();
     // Load reading list data if available
