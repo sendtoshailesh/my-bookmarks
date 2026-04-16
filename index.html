@@ -472,6 +472,8 @@ let activeTag = null;
 let showFavsOnly = false;
 let selectedIndex = -1;
 let customBookmarks = JSON.parse(localStorage.getItem('bk-custom') || '[]');
+let showReadingList = false;
+let readingListItems = [];
 
 // ── Emoji mapping ─────────────────────────────────────────────────
 const EM = {
@@ -555,14 +557,20 @@ function renderSidebar(){
   // All Bookmarks
   const allDiv=mkTreeItem('All Bookmarks','📚',allBookmarks.length,0,null);
   if(!currentFolder&&!showFavsOnly)allDiv.querySelector('.tree-item').classList.add('active');
-  allDiv.querySelector('.tree-item').addEventListener('click',()=>{showFavsOnly=false;activeTag=null;selectFolder(null);});
+  allDiv.querySelector('.tree-item').addEventListener('click',()=>{showFavsOnly=false;showReadingList=false;activeTag=null;selectFolder(null);});
   el.appendChild(allDiv);
 
   // Favorites
   const favDiv=mkTreeItem(`Favorites`,`⭐`,favorites.length,0,'__favs__');
   if(showFavsOnly)favDiv.querySelector('.tree-item').classList.add('active');
-  favDiv.querySelector('.tree-item').addEventListener('click',()=>{showFavsOnly=true;activeTag=null;currentFolder=null;renderContent();updateActiveStates();});
+  favDiv.querySelector('.tree-item').addEventListener('click',()=>{showFavsOnly=true;activeTag=null;currentFolder=null;showReadingList=false;renderContent();updateActiveStates();});
   el.appendChild(favDiv);
+
+  // Reading List
+  const rlDiv=mkTreeItem('Reading List','📖',readingListItems.length,0,'__readlist__');
+  if(showReadingList)rlDiv.querySelector('.tree-item').classList.add('active');
+  rlDiv.querySelector('.tree-item').addEventListener('click',()=>{showReadingList=true;showFavsOnly=false;activeTag=null;currentFolder=null;renderContent();updateActiveStates();});
+  el.appendChild(rlDiv);
 
   el.appendChild(Object.assign(document.createElement('div'),{className:'sidebar-divider'}));
 
@@ -603,9 +611,9 @@ function renderTreeNode(name,node,depth,path){
     if(currentFolder&&currentFolder.startsWith(path))chev.classList.add('open');
     item.querySelector('.tree-item').addEventListener('click',()=>{
       const isO=cc.style.display!=='none';cc.style.display=isO?'none':'block';chev.classList.toggle('open',!isO);
-      showFavsOnly=false;activeTag=null;selectFolder(path);
+      showFavsOnly=false;activeTag=null;showReadingList=false;selectFolder(path);
     });
-  }else{item.querySelector('.tree-item').addEventListener('click',()=>{showFavsOnly=false;activeTag=null;selectFolder(path);});}
+  }else{item.querySelector('.tree-item').addEventListener('click',()=>{showFavsOnly=false;activeTag=null;showReadingList=false;selectFolder(path);});}
   return w;
 }
 
@@ -618,11 +626,44 @@ function mkTreeItem(name,emoji,count,depth,path){
   return d;
 }
 
-function selectFolder(p){currentFolder=p;showFavsOnly=false;updateActiveStates();renderContent();}
+function selectFolder(p){currentFolder=p;showFavsOnly=false;showReadingList=false;updateActiveStates();renderContent();}
 function updateActiveStates(){document.querySelectorAll('.tree-item').forEach(el=>{
   if(showFavsOnly)el.classList.toggle('active',el.dataset.path==='__favs__');
+  else if(showReadingList)el.classList.toggle('active',el.dataset.path==='__readlist__');
   else el.classList.toggle('active',el.dataset.path===(currentFolder||''));
 });}
+
+// ── Reading List ─────────────────────────────────────────────────
+function renderReadingList(){
+  const content=document.getElementById('content');
+  if(!readingListItems.length){
+    content.innerHTML=`<div class="empty-state"><div class="empty-icon">📖</div><div class="empty-title">Reading List Empty</div><div class="empty-desc">Run <code>python3 reading_pipeline.py scan</code> to populate, or add items to Chrome's Reading List.</div></div>`;
+    return;
+  }
+  const sorted=[...readingListItems].sort((a,b)=>(b.score||0)-(a.score||0));
+  let html=`<div class="bookmarks-section"><div class="bookmarks-header"><div class="section-title">📖 Reading List</div><span class="section-count">${sorted.length} items</span></div>`;
+  html+=`<div class="bookmark-grid">`;
+  for(const item of sorted){
+    const score=item.score||0;
+    const cat=item.category||'';
+    const processed=item.processed?'✅':'📋';
+    const scoreBadge=score>=80?'🔥':score>=60?'⭐':'';
+    const domain=getDomain(item.url);
+    html+=`<a href="${escH(item.url)}" target="_blank" rel="noopener" class="bookmark-card">
+      <img class="bk-favicon" src="${getFav(item.url)}" onerror="this.style.display='none'" alt="">
+      <div class="bk-info">
+        <div class="bk-title">${escH(item.title||item.url)} ${scoreBadge}</div>
+        <div class="bk-url">${escH(domain)}</div>
+        <div class="bk-meta">
+          <span class="bk-folder">${processed} ${score}/100</span>
+          ${cat?`<span class="bk-tag">${escH(cat)}</span>`:''}
+          ${item.angle?`<span class="bk-tag" title="${escH(item.angle)}">💡</span>`:''}
+        </div>
+      </div></a>`;
+  }
+  html+='</div></div>';
+  content.innerHTML=html;
+}
 
 // ── Content ───────────────────────────────────────────────────────
 function getFiltered(){
@@ -647,6 +688,7 @@ function highlightText(text, query){
 }
 
 function renderContent(){
+  if(showReadingList){renderReadingList();return;}
   const content=document.getElementById('content');const filtered=getFiltered();
   selectedIndex=-1;
   let html='';
@@ -930,6 +972,11 @@ function exportCustomBookmarks() {
     for(const bm of allBookmarks)bm.tags=autoTags(bm);
     folderTree=buildTree(allBookmarks);
     renderSidebar();renderContent();
+    // Load reading list data if available
+    try{
+      const rlResp=await fetch('reading_list.json?t='+Date.now());
+      if(rlResp.ok){const rlData=await rlResp.json();readingListItems=rlData.items||[];renderSidebar();}
+    }catch(e){/* reading list not yet generated */}
   }catch(err){
     document.getElementById('content').innerHTML=`<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">Could not load bookmarks</div><div class="empty-desc">${escH(err.message)}</div></div>`;
   }

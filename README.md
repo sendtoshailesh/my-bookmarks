@@ -104,3 +104,67 @@ Press **N** (or click ➕) to add a bookmark directly from the browser.
 4. Rebuilds the folder hierarchy and writes `bookmarks.json` + `bookmarks.md`
 5. On import, backs up browser files and writes the merged bookmarks back
 6. Auto-commits changes to Git with a descriptive message
+
+## 📖 Reading List → Content Pipeline
+
+Transform your Chrome Reading List into blog posts, LinkedIn posts, and Twitter threads — with AI-powered topic scoring and OG card visuals.
+
+### Quick Start
+
+```bash
+# Scan reading list & score topics
+readlist                              # alias (or ./sync-readlist.sh)
+python3 reading_pipeline.py scan      # direct
+
+# Generate content for top 3 compelling items
+readgen 3                             # alias
+python3 reading_pipeline.py generate --top 3
+
+# Generate for a specific URL
+python3 reading_pipeline.py generate --url "https://example.com/article"
+
+# Create an OG card image
+python3 reading_pipeline.py visual "My Blog Title" --domain "medium.com"
+
+# View generated content
+python3 reading_pipeline.py publish
+```
+
+### Pipeline Flow
+
+```
+Chrome Reading List → Scrape → AI Score → Generate → Publish
+     (or "Read Later" folder)    (0-100)     ├─ blog.md (Medium)
+                                              ├─ linkedin.txt (Unicode)
+                                              ├─ twitter.txt (Thread)
+                                              └─ og_card.png (Visual)
+```
+
+### Setup Azure OpenAI
+
+Edit `.env.json` (gitignored) with your Azure OpenAI credentials:
+
+```json
+{
+  "AZURE_OPENAI_ENDPOINT": "https://your-resource.openai.azure.com/",
+  "AZURE_OPENAI_KEY": "your-key",
+  "AZURE_OPENAI_DEPLOYMENT": "gpt-4o"
+}
+```
+
+Without Azure OpenAI, the pipeline uses template-based generation and heuristic scoring.
+
+### Reading List Sources
+
+1. **Chrome's built-in Reading List** (`roots.reading_list` in Bookmarks JSON)
+2. **Bookmark folders** named: `Read Later`, `Reading List`, `To Read`, `Saved`
+
+### Content Output
+
+Generated content is saved to `content/<date>/<slug>/`:
+- `blog.md` — SEO-optimized Medium blog post (800-1200 words)
+- `linkedin.txt` — Unicode-formatted LinkedIn post (200-300 words)
+- `twitter.txt` — Numbered Twitter/X thread (6-8 tweets)
+- `og_card.png` — Social media card image (1200×630)
+- `meta.json` — Generation metadata and source info
+

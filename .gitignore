@@ -19,3 +19,6 @@ backups/
 *.swp
 *.swo
 *~
+
+# Secrets
+.env.json
