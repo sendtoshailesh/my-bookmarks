@@ -2,8 +2,11 @@
 
 A Git-based bookmark manager that syncs Chrome and Edge bookmarks into a single, deduplicated repository.
 
+### 🌐 [**Browse Bookmarks →**](https://sendtoshailesh.github.io/my-bookmarks/)
+
 ## Features
 
+- **[Web UI](https://sendtoshailesh.github.io/my-bookmarks/)** — modern single-page app with sidebar navigation, search, card/list views, favicons, and dark/light theme
 - **Export** bookmarks from Chrome and Edge
 - **Deduplicate** by URL (normalized — trailing slashes, case-insensitive host)
 - **Store** as both JSON (structured, diffable) and Markdown (browsable on GitHub)
