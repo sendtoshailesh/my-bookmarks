@@ -218,26 +218,205 @@ def write_bookmarks_json(bookmarks: list[dict], path: Path):
         json.dump(output, f, indent=2, ensure_ascii=False)
 
 
-def write_bookmarks_md(bookmarks: list[dict], path: Path):
-    """Write bookmarks as a human-readable Markdown file."""
-    tree = build_folder_tree(bookmarks)
-    lines = ["# 🔖 Bookmarks\n"]
-    now = datetime.now().strftime("%Y-%m-%d %H:%M")
-    lines.append(f"*Auto-generated on {now} — {len(bookmarks)} bookmarks*\n")
+def _slugify(text: str) -> str:
+    """Convert heading text to a GitHub-compatible anchor slug."""
+    import re
+    slug = text.lower().strip()
+    slug = re.sub(r'[^\w\s-]', '', slug)  # remove non-word chars except hyphens
+    slug = re.sub(r'[\s]+', '-', slug)     # spaces to hyphens
+    slug = re.sub(r'-+', '-', slug).strip('-')
+    return slug
 
-    def render_tree(node: dict, depth: int = 2):
-        for key, val in sorted(node.items()):
+
+# Emoji mapping for folder categories (matched case-insensitively)
+_FOLDER_EMOJI = {
+    "ai": "🤖", "ml": "🤖", "machine learning": "🤖", "deep learning": "🤖",
+    "cloud": "☁️", "aws": "☁️", "azure": "☁️", "gcp": "☁️",
+    "dev": "💻", "code": "💻", "programming": "💻", "coding": "💻",
+    "draw": "🎨", "design": "🎨", "ui": "🎨", "ux": "🎨",
+    "git": "🔀", "gh": "🔀", "github": "🔀",
+    "video": "🎬", "youtube": "🎬",
+    "data": "📊", "analytics": "📊", "database": "📊", "db": "📊",
+    "security": "🔒", "auth": "🔒",
+    "network": "🌐", "networking": "🌐", "web": "🌐",
+    "tool": "🔧", "tools": "🔧", "utility": "🔧",
+    "learn": "📚", "education": "📚", "training": "📚", "course": "📚",
+    "workshop": "📚", "workshops": "📚",
+    "news": "📰", "blog": "📰", "blogs": "📰",
+    "finance": "💰", "money": "💰", "invest": "💰",
+    "docker": "🐳", "container": "🐳", "kubernetes": "🐳", "k8s": "🐳",
+    "terraform": "🏗️", "infra": "🏗️", "infrastructure": "🏗️",
+    "test": "🧪", "testing": "🧪",
+    "api": "🔌", "rest": "🔌", "graphql": "🔌",
+    "mobile": "📱", "android": "📱", "ios": "📱",
+    "image": "🖼️", "images": "🖼️", "photo": "🖼️",
+    "prompt": "💬", "chat": "💬", "gpt": "💬", "llm": "💬",
+    "bookmark": "🔖", "bookmarks bar": "📌", "other bookmarks": "📂",
+    "mobile bookmarks": "📱", "imported": "📥",
+    "cheatsheet": "📋", "cheat": "📋", "reference": "📋",
+    "storage": "💾", "backup": "💾",
+    "music": "🎵", "audio": "🎵",
+    "game": "🎮", "games": "🎮",
+    "migrate": "🔄", "migration": "🔄", "migrations": "🔄",
+    "monitor": "📡", "observability": "📡", "logging": "📡",
+}
+
+
+def _get_emoji(folder_name: str) -> str:
+    """Get an emoji for a folder name based on keyword matching."""
+    name_lower = folder_name.lower().strip()
+    # Exact match first
+    if name_lower in _FOLDER_EMOJI:
+        return _FOLDER_EMOJI[name_lower]
+    # Partial match
+    for keyword, emoji in _FOLDER_EMOJI.items():
+        if keyword in name_lower or name_lower in keyword:
+            return emoji
+    return "📁"
+
+
+def _extract_domain(url: str) -> str:
+    """Extract a short readable domain from a URL."""
+    try:
+        parsed = urlparse(url)
+        host = parsed.netloc.lower()
+        # Strip www.
+        if host.startswith("www."):
+            host = host[4:]
+        return host
+    except Exception:
+        return ""
+
+
+def _count_items(node: dict) -> int:
+    """Count total bookmark items in a tree node recursively."""
+    count = 0
+    for key, val in node.items():
+        if key == "__items__":
+            count += len(val)
+        elif isinstance(val, dict):
+            count += _count_items(val)
+    return count
+
+
+def _count_folders(node: dict) -> int:
+    """Count total sub-folders in a tree node recursively."""
+    count = 0
+    for key, val in node.items():
+        if key != "__items__" and isinstance(val, dict):
+            count += 1 + _count_folders(val)
+    return count
+
+
+def _collect_toc_entries(node: dict, depth: int = 2, path: str = "") -> list[tuple]:
+    """Collect TOC entries as (depth, name, slug, item_count) tuples."""
+    entries = []
+    for key in sorted(node.keys()):
+        if key == "__items__":
+            continue
+        val = node[key]
+        if not isinstance(val, dict):
+            continue
+        emoji = _get_emoji(key)
+        count = _count_items(val)
+        full_path = f"{path}/{key}" if path else key
+        slug = _slugify(f"{emoji} {key}")
+        entries.append((depth, key, slug, count, emoji))
+        if depth < 5:  # limit TOC depth
+            entries.extend(_collect_toc_entries(val, depth + 1, full_path))
+    return entries
+
+
+def write_bookmarks_md(bookmarks: list[dict], path: Path):
+    """Write bookmarks as a rich, navigable Markdown file with TOC."""
+    tree = build_folder_tree(bookmarks)
+    now = datetime.now().strftime("%Y-%m-%d %H:%M")
+    lines = []
+
+    # ── Header ───────────────────────────────────────────────────────
+    lines.append("# 🔖 Bookmarks\n")
+    lines.append(f"> **{len(bookmarks):,}** bookmarks · Auto-synced on {now}")
+    lines.append(f"> Use `Ctrl+F` / `⌘+F` to search · [How to sync →](#-sync-commands)\n")
+
+    # ── Summary stats ────────────────────────────────────────────────
+    lines.append("## 📊 Overview\n")
+    lines.append("| Section | Folders | Bookmarks |")
+    lines.append("|---------|--------:|----------:|")
+    for key in sorted(tree.keys()):
+        if key == "__items__":
+            continue
+        val = tree[key]
+        emoji = _get_emoji(key)
+        folders = _count_folders(val)
+        items = _count_items(val)
+        slug = _slugify(f"{emoji} {key}")
+        lines.append(f"| [{emoji} {key}](#{slug}) | {folders} | {items} |")
+    lines.append(f"| **Total** | | **{len(bookmarks):,}** |")
+    lines.append("")
+
+    # ── Table of Contents (collapsible) ──────────────────────────────
+    toc_entries = _collect_toc_entries(tree)
+
+    lines.append("<details>")
+    lines.append(f"<summary><strong>📑 Table of Contents</strong> ({len(toc_entries)} sections)</summary>")
+    lines.append("")
+
+    for depth, name, slug, count, emoji in toc_entries:
+        indent = "  " * (depth - 2)
+        count_badge = f" ({count})" if count > 0 else ""
+        lines.append(f"{indent}- [{emoji} {name}{count_badge}](#{slug})")
+
+    lines.append("")
+    lines.append("</details>")
+    lines.append("")
+    lines.append("---\n")
+
+    # ── Bookmark sections ────────────────────────────────────────────
+    section_counter = [0]  # mutable counter for back-to-top tracking
+
+    def render_tree(node: dict, depth: int = 2, parent_is_root: bool = False):
+        for key in sorted(node.keys()):
             if key == "__items__":
-                for item in val:
+                for item in node[key]:
                     title = item["title"] or item["url"]
-                    lines.append(f"- [{title}]({item['url']})")
+                    domain = _extract_domain(item["url"])
+                    domain_label = f" · `{domain}`" if domain else ""
+                    # Escape any pipes in titles for clean rendering
+                    title = title.replace("|", "∣")
+                    lines.append(f"- [{title}]({item['url']}){domain_label}")
                 lines.append("")
             else:
-                prefix = "#" * min(depth, 6)
-                lines.append(f"\n{prefix} {key}\n")
-                render_tree(val, depth + 1)
+                val = node[key]
+                if not isinstance(val, dict):
+                    continue
+                emoji = _get_emoji(key)
+                count = _count_items(val)
+                count_badge = f" ({count})" if count > 0 else ""
+                hashes = "#" * min(depth, 6)
+
+                # Add divider before h2 sections
+                if depth == 2:
+                    lines.append("---\n")
+
+                lines.append(f"{hashes} {emoji} {key}{count_badge}\n")
+                render_tree(val, depth + 1, parent_is_root=(depth == 2))
+
+                # Back-to-top link after each h2 section's content
+                if depth == 2:
+                    lines.append("\n[⬆ Back to top](#-bookmarks)\n")
 
     render_tree(tree)
+
+    # ── Footer: sync commands reference ──────────────────────────────
+    lines.append("---\n")
+    lines.append("## 🔄 Sync Commands\n")
+    lines.append("```bash")
+    lines.append("python3 bookmark_sync.py sync          # Full sync + commit")
+    lines.append("python3 bookmark_sync.py export        # Browser → repo")
+    lines.append("python3 bookmark_sync.py import        # Repo → browsers")
+    lines.append("python3 bookmark_sync.py status        # Show stats")
+    lines.append("```\n")
+    lines.append(f"*Generated by [bookmark_sync.py](bookmark_sync.py) — {now}*\n")
 
     with open(path, "w", encoding="utf-8") as f:
         f.write("\n".join(lines))
