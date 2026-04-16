@@ -62,15 +62,22 @@ python3 bookmark_sync.py sync --browser edge
 
 ## ⚡ One-Click Sync (macOS)
 
-### Option 1: Shell Script
+### Option 1: Terminal Alias
+```bash
+syncbm              # sync both browsers (alias in ~/.zshrc)
+syncbm chrome       # Chrome only
+syncbm edge         # Edge only
+```
+Shows a macOS notification with results ✅
+
+### Option 2: Shell Script (direct)
 ```bash
 ./sync-bookmarks.sh           # sync both browsers
 ./sync-bookmarks.sh chrome    # Chrome only
 ./sync-bookmarks.sh edge      # Edge only
 ```
-Shows a macOS notification with results ✅
 
-### Option 2: Keyboard Shortcut
+### Option 3: Keyboard Shortcut
 The repo includes a macOS Quick Action (`Sync Bookmarks`) installed at `~/Library/Services/`.
 
 To assign a keyboard shortcut:
@@ -79,7 +86,7 @@ To assign a keyboard shortcut:
 
 You can also run it from any app's menu: **App Name → Services → Sync Bookmarks**
 
-### Option 3: Web UI
+### Option 4: Web UI
 Press **R** (or click 🔄) in the [web app](https://sendtoshailesh.github.io/my-bookmarks/) to refresh.
 Press **N** (or click ➕) to add a bookmark directly from the browser.
 
