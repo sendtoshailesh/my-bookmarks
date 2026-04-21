@@ -52,6 +52,11 @@ if OUTPUT=$(python3 "$SYNC_SCRIPT" sync --browser "$BROWSER" 2>&1); then
     MSG="✅ Sync completed in ${DURATION}s"
   fi
   
+  # Check if push happened (look for push confirmation in output)
+  if echo "$OUTPUT" | grep -q "Pushed to GitHub"; then
+    MSG="$MSG — published to Pages 🚀"
+  fi
+
   notify "🔖 Bookmark Sync" "$MSG" "Glass"
   echo "$MSG"
   echo "$OUTPUT"

@@ -482,7 +482,7 @@ def import_bookmarks(browsers: list[str], dry_run: bool = False):
 
 
 def git_commit(message: str):
-    """Stage bookmark files and commit."""
+    """Stage bookmark files, commit, and push to trigger GitHub Pages deploy."""
     try:
         subprocess.run(
             ["git", "add", "bookmarks.json", "bookmarks.md"],
@@ -498,10 +498,25 @@ def git_commit(message: str):
                 cwd=REPO_DIR, check=True, capture_output=True,
             )
             print(f"  📝 Committed: {message}")
+            # Push to remote to trigger GitHub Pages deployment
+            git_push()
         else:
             print("  ℹ  No changes to commit.")
     except subprocess.CalledProcessError as e:
         print(f"  ⚠  Git commit failed: {e}")
+
+
+def git_push():
+    """Push to origin to trigger GitHub Pages deployment."""
+    try:
+        subprocess.run(
+            ["git", "push"],
+            cwd=REPO_DIR, check=True, capture_output=True,
+        )
+        print("  🚀 Pushed to GitHub — Pages will redeploy automatically.")
+    except subprocess.CalledProcessError as e:
+        print(f"  ⚠  Git push failed: {e}")
+        print("     Run 'git push' manually to publish to GitHub Pages.")
 
 
 def show_status():
