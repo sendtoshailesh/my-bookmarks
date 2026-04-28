@@ -1516,6 +1516,16 @@
                   "name": "Git-APE - Agentic Platform Engineering Explainer Video and Demo - YouTube",
                   "type": "url",
                   "url": "https://www.youtube.com/watch?v=Td6rv_RGArQ"
+                },
+                {
+                  "name": "microsoft/agentrc: Get your repo ready for AI.",
+                  "type": "url",
+                  "url": "https://github.com/microsoft/agentrc"
+                },
+                {
+                  "name": "Azure/git-ape: platform engineering framework for the agentic age",
+                  "type": "url",
+                  "url": "https://github.com/Azure/git-ape"
                 }
               ]
             }
@@ -5924,17 +5934,17 @@
         {
           "name": "",
           "type": "url",
+          "url": "https://github.com/copilot"
+        },
+        {
+          "name": "",
+          "type": "url",
           "url": "https://github.com/trending"
         },
         {
           "name": "",
           "type": "url",
           "url": "https://learn.github.com/skills"
-        },
-        {
-          "name": "",
-          "type": "url",
-          "url": "https://github.com/copilot"
         },
         {
           "name": "",
@@ -6060,6 +6070,11 @@
           "name": "",
           "type": "url",
           "url": "https://feeder.co/reader?logged_in=yes"
+        },
+        {
+          "name": "Clipchamp",
+          "type": "url",
+          "url": "https://microsoftapc-my.sharepoint.com/_layouts/15/videohub.aspx?referrer=OfficeHome&referrerScenario=NewVideoHubBanner"
         },
         {
           "name": "",

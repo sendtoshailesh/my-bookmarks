@@ -1,21 +1,21 @@
 # 🔖 Bookmarks
 
-> **1,448** bookmarks · Auto-synced on 2026-04-21 16:00
+> **1,451** bookmarks · Auto-synced on 2026-04-28 16:39
 > Use `Ctrl+F` / `⌘+F` to search · [How to sync →](#-sync-commands)
 
 ## 📊 Overview
 
 | Section | Folders | Bookmarks |
 |---------|--------:|----------:|
-| [📌 Bookmarks Bar](#bookmarks-bar) | 131 | 1062 |
+| [📌 Bookmarks Bar](#bookmarks-bar) | 131 | 1065 |
 | [📱 Mobile Bookmarks](#mobile-bookmarks) | 0 | 9 |
 | [📂 Other Bookmarks](#other-bookmarks) | 5 | 377 |
-| **Total** | | **1,448** |
+| **Total** | | **1,451** |
 
 <details>
 <summary><strong>📑 Table of Contents</strong> (86 sections)</summary>
 
-- [📌 Bookmarks Bar (1062)](#bookmarks-bar)
+- [📌 Bookmarks Bar (1065)](#bookmarks-bar)
   - [📁 0 (14)](#0)
   - [📁 1 (80)](#1)
     - [📋 CheatSheet (1)](#cheatsheet)
@@ -32,7 +32,7 @@
     - [💬 Prompt-ENG (11)](#prompt-eng)
     - [📚 workshops (2)](#workshops)
   - [☁️ AZ (15)](#az)
-  - [🔀 GH (100)](#gh)
+  - [🔀 GH (102)](#gh)
     - [📁 Agents-ref (3)](#agents-ref)
     - [📁 DemoDeck (2)](#demodeck)
     - [🔀 GH-Copilot (8)](#gh-copilot)
@@ -41,7 +41,7 @@
     - [📁 TBB (3)](#tbb)
     - [📁 compete (9)](#compete)
     - [🔀 gh-docs-blogs (2)](#gh-docs-blogs)
-    - [🔀 git-repos (22)](#git-repos)
+    - [🔀 git-repos (24)](#git-repos)
   - [🌐 K (678)](#k)
     - [🤖 AI (1)](#ai)
       - [🤖 ML (1)](#ml)
@@ -108,7 +108,7 @@
 
 ---
 
-## 📌 Bookmarks Bar (1062)
+## 📌 Bookmarks Bar (1065)
 
 ### 📁 0 (14)
 
@@ -330,7 +330,7 @@
 - [Customer Story - Customer Story - All Stories View](https://microsoft.sharepoint.com/teams/AppInnovationCustomerStory/Lists/Customer%20Story/AllItems.aspx?viewid=f208ee9e-2339-4ead-810d-f2398b7e3a33&env=WebViewList&OR=Teams-HL&CT=1718092239590) · `microsoft.sharepoint.com`
 - [Azure Samples](https://github.com/Azure-Samples) · `github.com`
 
-### 🔀 GH (100)
+### 🔀 GH (102)
 
 #### 📁 Agents-ref (3)
 
@@ -435,7 +435,7 @@
 - [Adding repository custom instructions for GitHub Copilot - GitHub Docs](https://docs.github.com/en/copilot/how-tos/configure-custom-instructions/add-repository-instructions) · `docs.github.com`
 - [A cheat sheet to slash commands in GitHub Copilot CLI - The GitHub Blog](https://github.blog/ai-and-ml/github-copilot/a-cheat-sheet-to-slash-commands-in-github-copilot-cli/?utm_source=insider&utm_medium=email&utm_campaign=2026-em-GitHub-Insider-February-19) · `github.blog`
 
-#### 🔀 git-repos (22)
+#### 🔀 git-repos (24)
 
 - [github/spec-kit: 💫 Toolkit to help you get started with Spec-Driven Development](https://github.com/github/spec-kit) · `github.com`
 - [gh-msft-innersource/getting-started: Welcome to Microsoft Revenue's place to learn, upskill and demo GitHub capabilities!](https://github.com/gh-msft-innersource/getting-started) · `github.com`
@@ -459,6 +459,8 @@
 - [bradygaster/squad: Squad: AI agent teams for any project](https://github.com/bradygaster/squad) · `github.com`
 - [github/actions-migrations-via-copilot: Migrate to GitHub Actions from multiple other CI/CD systems using Copilot](https://github.com/github/actions-migrations-via-copilot) · `github.com`
 - [Git-APE - Agentic Platform Engineering Explainer Video and Demo - YouTube](https://www.youtube.com/watch?v=Td6rv_RGArQ) · `youtube.com`
+- [microsoft/agentrc: Get your repo ready for AI.](https://github.com/microsoft/agentrc) · `github.com`
+- [Azure/git-ape: platform engineering framework for the agentic age](https://github.com/Azure/git-ape) · `github.com`
 
 ### 🌐 K (678)
 
@@ -1525,9 +1527,9 @@
 - [https://substack.com/home](https://substack.com/home) · `substack.com`
 - [https://notebooklm.google.com/](https://notebooklm.google.com/) · `notebooklm.google.com`
 - [https://medium.com/me/lists](https://medium.com/me/lists) · `medium.com`
+- [https://github.com/copilot](https://github.com/copilot) · `github.com`
 - [https://github.com/trending](https://github.com/trending) · `github.com`
 - [https://learn.github.com/skills](https://learn.github.com/skills) · `learn.github.com`
-- [https://github.com/copilot](https://github.com/copilot) · `github.com`
 - [https://www.alphaxiv.org/](https://www.alphaxiv.org/) · `alphaxiv.org`
 - [https://papiers.ai/](https://papiers.ai/) · `papiers.ai`
 - [https://huggingface.co/papers/trending](https://huggingface.co/papers/trending) · `huggingface.co`
@@ -1553,6 +1555,7 @@
 - [https://idx.google.com/](https://idx.google.com/) · `idx.google.com`
 - [https://www.moneycontrol.com/bestportfolio/wealth-management-tool/investments#port_top](https://www.moneycontrol.com/bestportfolio/wealth-management-tool/investments#port_top) · `moneycontrol.com`
 - [https://feeder.co/reader?logged_in=yes](https://feeder.co/reader?logged_in=yes) · `feeder.co`
+- [Clipchamp](https://microsoftapc-my.sharepoint.com/_layouts/15/videohub.aspx?referrer=OfficeHome&referrerScenario=NewVideoHubBanner) · `microsoftapc-my.sharepoint.com`
 - [https://feedly.com/i/my/me](https://feedly.com/i/my/me) · `feedly.com`
 - [https://sendtoshailesh.github.io/](https://sendtoshailesh.github.io/) · `sendtoshailesh.github.io`
 - [https://m365.cloud.microsoft/chat?auth=2](https://m365.cloud.microsoft/chat?auth=2) · `m365.cloud.microsoft`
@@ -1992,4 +1995,4 @@ python3 bookmark_sync.py import        # Repo → browsers
 python3 bookmark_sync.py status        # Show stats
 ```
 
-*Generated by [bookmark_sync.py](bookmark_sync.py) — 2026-04-21 16:00*
+*Generated by [bookmark_sync.py](bookmark_sync.py) — 2026-04-28 16:39*
