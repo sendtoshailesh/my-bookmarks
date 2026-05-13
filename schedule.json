@@ -1,0 +1,12 @@
+{
+  "schedules": [
+    {
+      "name": "LinkedIn Daily",
+      "url": "https://www.linkedin.com",
+      "browser": "chrome",
+      "time": "19:00",
+      "days": ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
+      "enabled": true
+    }
+  ]
+}

@@ -168,3 +168,59 @@ Generated content is saved to `content/<date>/<slug>/`:
 - `og_card.png` — Social media card image (1200×630)
 - `meta.json` — Generation metadata and source info
 
+## ⏰ Scheduled Website Opener
+
+Automatically open websites in Chrome at scheduled times. If your laptop is asleep at the scheduled time, the URL opens as soon as the laptop wakes up.
+
+### Quick Start
+
+```bash
+# Install the LaunchAgent (runs every minute in background)
+python3 scheduled_opener.py --install
+
+# Check current status
+python3 scheduled_opener.py --status
+
+# Open all scheduled URLs right now
+python3 scheduled_opener.py --run
+
+# Uninstall
+python3 scheduled_opener.py --uninstall
+```
+
+### Configuration
+
+Edit `schedule.json` to add or modify scheduled URLs:
+
+```json
+{
+  "schedules": [
+    {
+      "name": "LinkedIn Daily",
+      "url": "https://www.linkedin.com",
+      "browser": "chrome",
+      "time": "19:00",
+      "days": ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
+      "enabled": true
+    }
+  ]
+}
+```
+
+| Field | Description |
+|-------|-------------|
+| `name` | Friendly name for the schedule |
+| `url` | URL to open |
+| `browser` | `chrome`, `edge`, `safari`, or `default` |
+| `time` | 24-hour time (`HH:MM`) |
+| `days` | Array of weekday names (omit for every day) |
+| `enabled` | Set `false` to pause without deleting |
+
+### How It Works
+
+- A macOS **LaunchAgent** runs the script every 60 seconds
+- Each run checks which scheduled URLs are **due since the last check**
+- If the laptop was asleep, launchd fires on wake and the script catches up
+- Duplicate opens are prevented via persisted state (`.opener_state.json`)
+- Logs are written to `~/.local/log/scheduled-opener.log`
+
