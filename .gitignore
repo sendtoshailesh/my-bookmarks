@@ -22,3 +22,6 @@ backups/
 
 # Secrets
 .env.json
+
+# Scheduled opener state
+.opener_state.json
